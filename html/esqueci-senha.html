@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Recuperar Senha - Bloom Agenda</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../css/style.css" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="theme-color" content="#ff6b9d" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="logo">
+        <i class="fas fa-calendar-alt"></i>
+      </div>
+      <h2>Bloom Agenda</h2>
+      <p class="subtitle" id="subtitle">
+        Informe seu e-mail e enviaremos um link para redefinir sua senha.
+      </p>
+
+      <!-- Etapa 1: solicitar link por e-mail -->
+      <form id="forgotForm">
+        <div class="input-group">
+          <i class="fas fa-envelope"></i>
+          <input type="email" id="email" placeholder="E-mail" required />
+        </div>
+        <button type="submit" class="login-btn">
+          <i class="fas fa-paper-plane"></i> Enviar link
+        </button>
+      </form>
+
+      <!-- Etapa 2: redefinir senha (quando há token na URL) -->
+      <form id="resetForm" style="display: none">
+        <div class="input-group">
+          <i class="fas fa-lock"></i>
+          <input
+            type="password"
+            id="novaSenha"
+            placeholder="Nova senha (mín. 8 caracteres)"
+            required
+          />
+        </div>
+        <div class="input-group">
+          <i class="fas fa-lock"></i>
+          <input
+            type="password"
+            id="confirmarSenha"
+            placeholder="Confirmar nova senha"
+            required
+          />
+        </div>
+        <button type="submit" class="login-btn">
+          <i class="fas fa-check-circle"></i> Redefinir senha
+        </button>
+      </form>
+
+      <div id="errorMsg" class="error">Não foi possível concluir. Tente novamente!</div>
+      <div id="successMsg" class="success">Tudo certo!</div>
+      <div class="links">
+        <a href="index.html" class="back-link">
+          <i class="fas fa-arrow-left"></i> Voltar ao login
+        </a>
+      </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/pwa.js"></script>
+    <script>
+      const forgotForm = document.getElementById("forgotForm");
+      const resetForm = document.getElementById("resetForm");
+      const subtitle = document.getElementById("subtitle");
+      const errorMsg = document.getElementById("errorMsg");
+      const successMsg = document.getElementById("successMsg");
+
+      const token = new URLSearchParams(location.search).get("token");
+
+      function showError(msg) {
+        successMsg.style.display = "none";
+        errorMsg.textContent = msg;
+        errorMsg.style.display = "block";
+      }
+      function showSuccess(msg) {
+        errorMsg.style.display = "none";
+        successMsg.textContent = msg;
+        successMsg.style.display = "block";
+      }
+
+      // Se a URL traz um token, mostra a etapa de redefinição.
+      if (token) {
+        forgotForm.style.display = "none";
+        resetForm.style.display = "block";
+        subtitle.textContent = "Defina sua nova senha de acesso.";
+      }
+
+      // Etapa 1 — solicitar o link
+      forgotForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("email").value.trim();
+        try {
+          const data = await BloomAPI.auth.forgotPassword(email);
+          showSuccess(data.message || "Se o e-mail existir, enviaremos as instruções.");
+        } catch (err) {
+          showError(err.message || "Erro ao solicitar recuperação.");
+        }
+      });
+
+      // Etapa 2 — redefinir a senha
+      resetForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const novaSenha = document.getElementById("novaSenha").value;
+        const confirmar = document.getElementById("confirmarSenha").value;
+
+        if (novaSenha.length < 8) return showError("A senha deve ter no mínimo 8 caracteres.");
+        if (novaSenha !== confirmar) return showError("As senhas não coincidem.");
+
+        try {
+          await BloomAPI.auth.resetPassword(token, novaSenha);
+          showSuccess("Senha redefinida! Redirecionando para o login...");
+          setTimeout(() => (window.location.href = "index.html"), 1500);
+        } catch (err) {
+          showError(err.message || "Token inválido ou expirado.");
+        }
+      });
+    </script>
+  </body>
+</html>

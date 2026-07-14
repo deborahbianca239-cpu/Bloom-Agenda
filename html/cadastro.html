@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro - Bloom Agenda</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../css/style.css" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="theme-color" content="#ff6b9d" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="logo">
+        <i class="fas fa-calendar-alt"></i>
+      </div>
+      <h2>Bloom Agenda</h2>
+      <p class="subtitle">
+        Crie sua conta e comece a organizar sua rotina.
+      </p>
+      <form id="signupForm">
+        <div class="input-group">
+          <i class="fas fa-user"></i>
+          <input type="text" id="nome" placeholder="Nome completo" required />
+        </div>
+        <div class="input-group">
+          <i class="fas fa-envelope"></i>
+          <input type="email" id="email" placeholder="E-mail" required />
+        </div>
+        <div class="input-group">
+          <i class="fas fa-lock"></i>
+          <input type="password" id="senha" placeholder="Criar senha" required />
+        </div>
+        <button type="submit" class="login-btn">
+          <i class="fas fa-user-plus"></i> Cadastrar
+        </button>
+        <div id="errorMsg" class="error">Erro ao cadastrar. Tente novamente!</div>
+        <div id="successMsg" class="success">
+          Cadastro realizado com sucesso! Redirecionando...
+        </div>
+      </form>
+      <div class="links">
+        <a href="index.html" class="back-link">
+          <i class="fas fa-arrow-left"></i> Já tem conta? Faça login
+        </a>
+      </div>
+
+   <script src="../js/api.js"></script>
+   <script src="../js/pwa.js"></script>
+   <script>
+  const form = document.getElementById("signupForm");
+  const errorMsg = document.getElementById("errorMsg");
+  const successMsg = document.getElementById("successMsg");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const nome = document.getElementById("nome").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const senha = document.getElementById("senha").value;
+
+    errorMsg.style.display = "none";
+    successMsg.style.display = "none";
+
+    if (senha.length < 8) {
+      errorMsg.textContent = "A senha deve ter no mínimo 8 caracteres.";
+      errorMsg.style.display = "block";
+      return;
+    }
+
+    try {
+      // Cadastra e já autentica (o backend retorna token).
+      const data = await BloomAPI.auth.register({ nome, email, senha });
+      BloomAPI.setToken(data.token);
+      BloomAPI.setUser(data.user);
+
+      successMsg.style.display = "block";
+      setTimeout(() => {
+        window.location.href = "home.html";
+      }, 1200);
+    } catch (error) {
+      errorMsg.textContent =
+        error.message || "Erro ao cadastrar. Tente novamente!";
+      errorMsg.style.display = "block";
+    }
+  });
+</script>
+  </body>
+</html>
